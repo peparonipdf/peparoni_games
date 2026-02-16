@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>Game</title>
+        <style>
+            body {
+                background-color:lightgreen;
+            }
+            h1 {
+                border:solid;
+                border-color:black;
+                margin-left:300px;
+                margin-right:300px;
+                background-color:green;
+                color:white;
+                text-align:center;
+            }
+            p {
+                text-align:center;
+            }
+            .stats {
+                display:flex;
+                gap:100px;
+                justify-content:center;
+            }
+            .textbox {
+                margin-left:400px;
+                margin-right:400px;
+                background:lightgray;
+                border:solid;
+                border-color:black;
+            }
+            button {
+                height:40px;
+                width:120px;
+                background-color:lightblue;
+                border-radius:100vh;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>体内時計×瞬発力ゲーム</h1>
+        <div class="stats">
+        <p id="life">LIFE:</p>
+        <p id="round">ROUND:</p>
+        </div>
+        <p id="message" class="textbox">ラウンドいくつまで到達できるかな？</p>
+        <p id="buttons"></p>
+        <script>
+            'use strict';
+            let life;
+            let round;
+            let flag;
+            let target_time;
+            let interval;
+            let event;
+            let time_limit;
+            let event_time;
+            let response_time;
+            document.getElementById('buttons').insertAdjacentHTML('beforeend', '<button type="button" onclick="start()">スタート</button>');
+
+            function start() {
+                life = 100;
+                round = 1;
+                flag = false;
+                document.getElementById('life').textContent = 'LIFE:' + life;
+                document.getElementById('round').textContent = 'ROUND:' + round;
+                game();
+            }
+
+            function next_round() {
+                flag = false;
+                round++;
+                document.getElementById('life').textContent = 'LIFE:' + life;
+                document.getElementById('round').textContent = 'ROUND:' + round;
+                game();
+            }
+
+            function judge() {
+                clearTimeout(event);
+                clearTimeout(time_limit);
+                if (!flag) {
+                    life -= 20;
+                    if (life <= 0) {
+                        document.getElementById('life').textContent = 'LIFE:0 (-' + (life + 20) + ')';
+                        document.getElementById('message').textContent = 'フライング！ゲームオーバー！';
+                        document.getElementById('buttons').textContent = '';
+                        setTimeout(() => {
+                            document.getElementById('buttons').insertAdjacentHTML('beforeend', '<button type="button" onclick="start()">リトライ</button>');
+                        }, 1000);
+                    }
+                    else {
+                        document.getElementById('life').textContent = 'LIFE:' + life + ' (-20)';
+                        document.getElementById('message').textContent = 'フライング！';
+                        document.getElementById('buttons').textContent = '';
+                        setTimeout(() => {
+                            next_round();
+                        }, 1000);
+                    }
+                }
+                else {
+                    response_time = new Date();
+                    let dif = (response_time - event_time) - 10 * target_time;
+                    if (-9 <= dif && dif <= 9) {
+                        if (dif >= 0) {
+                            document.getElementById('message').textContent = 'PERFECT！ +' + dif + 'ms';
+                        }
+                        else {
+                            document.getElementById('message').textContent = 'PERFECT！ ' + dif + 'ms';
+                        }
+                    }
+                    else if (dif < -9) {
+                        if (life <= Math.floor(((-1) * dif) / 10)) {
+                            document.getElementById('message').textContent = 'FAST ' + dif + 'ms ゲームオーバー！';
+                            document.getElementById('life').textContent = 'LIFE:0 (-' + life + ')';
+                            life -= Math.floor(((-1) * dif) / 10);
+                            document.getElementById('buttons').textContent = '';
+                            setTimeout(() => {
+                                document.getElementById('buttons').insertAdjacentHTML('beforeend', '<button type="button" onclick="start()">リトライ</button>');
+                            }, 1000);
+                        }
+                        else {
+                            life -= Math.floor(((-1) * dif) / 10);
+                            document.getElementById('message').textContent = 'FAST ' + dif + 'ms';
+                            document.getElementById('life').textContent = 'LIFE:' + life + ' (-' + Math.floor(((-1) * dif) / 10) + ')';
+                        }
+                    }
+                    else {
+                        document.getElementById('message').textContent = 'SLOW +' + dif + 'ms';
+                        if (life <= Math.floor(dif / 10)) {
+                            document.getElementById('message').textContent = 'SLOW ' + dif + 'ms ゲームオーバー！';
+                            document.getElementById('buttons').textContent = '';
+                            setTimeout(() => {
+                                document.getElementById('buttons').insertAdjacentHTML('beforeend', '<button type="button" onclick="start()">リトライ</button>');
+                            }, 1000);
+                        }
+                        life -= Math.floor(dif / 10);
+                        document.getElementById('life').textContent = 'LIFE:' + life + ' (-' + Math.floor(dif / 10) + ')';
+                    }
+                    if (life > 0) {
+                        document.getElementById('buttons').textContent = '';
+                        setTimeout(() => {
+                            next_round();
+                        }, 1000);
+                    }
+                }
+            }
+        
+            function game() {
+                target_time = Math.floor(Math.random() * 26 + 25);
+                interval = Math.floor(Math.random() * 4001 + 1000);
+                document.getElementById('message').textContent = 'ここの表示が変わってから0.' + target_time + '秒後にボタンを押せ！';
+                document.getElementById('buttons').textContent = '';
+                document.getElementById('buttons').insertAdjacentHTML('beforeend', '<button type="button" onclick="judge()">ボタン</button>')
+
+                event = setTimeout(() => {
+                    flag = true;
+                    document.getElementById('message').textContent = '！！';
+                    event_time = new Date();
+                }, interval);
+
+                time_limit = setTimeout(() => {
+                    document.getElementById('life').textContent = 'LIFE:0 (-' + life + ')';
+                    document.getElementById('message').textContent = 'SLOW ゲームオーバー！';
+                    document.getElementById('buttons').textContent = '';
+                    setTimeout(() => {
+                        document.getElementById('buttons').insertAdjacentHTML('beforeend', '<button type="button" onclick="start()">リトライ</button>');
+                    }, 1000);
+                }, interval + life * 10 + target_time * 10);
+            }
+        </script>
+    </body>
+</html>
